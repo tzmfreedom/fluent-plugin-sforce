@@ -1,5 +1,5 @@
 # Fluent::Plugin::Sforce
-
+[![Build Status](https://travis-ci.org/tzmfreedom/fluent-plugin-sforce.svg?branch=master)](https://travis-ci.org/tzmfreedom/fluent-plugin-sforce)  
 Fluent Plugin for Salesforce.com
 
 ## Installation
