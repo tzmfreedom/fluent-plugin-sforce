@@ -7,7 +7,7 @@ gem 'faye', '0.8.9'
 require 'faye'
 
 module Fluent
-  class SomeInput < Input
+  class SforceInput < Input
     unless method_defined?(:log)
       define_method("log") { $log }
     end
