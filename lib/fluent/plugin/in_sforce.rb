@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*- 
+# frozen_string_literal: true
+
 require 'nokogiri'
 require 'restforce'
 require 'date'
