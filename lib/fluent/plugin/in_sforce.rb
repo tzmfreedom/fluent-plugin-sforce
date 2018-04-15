@@ -4,7 +4,6 @@ require 'nokogiri'
 require 'restforce'
 require 'date'
 require 'net/http'
-gem 'faye', '0.8.9'
 require 'faye'
 
 module Fluent
@@ -12,7 +11,7 @@ module Fluent
     unless method_defined?(:log)
       define_method("log") { $log }
     end
-    
+
     Plugin.register_input('sforce', self)
 
     config_param :query, :string, :default => "SELECT id, Body, CreatedById FROM FeedItem"
@@ -21,7 +20,7 @@ module Fluent
     config_param :topic, :string, :default => nil
     config_param :username, :string
     config_param :password, :string
-    
+
     def configure(conf)
       super
     end
@@ -31,7 +30,7 @@ module Fluent
       login_info = login()
       client = Restforce.new :oauth_token => login_info["sessionId"],
         :instance_url => login_info["instanceUrl"]
-      
+
       th_low = DateTime.now().strftime("%Y-%m-%dT%H:%M:%S.000%Z")
       # query
       if @topic == nil then
@@ -46,7 +45,7 @@ module Fluent
           elsif @query =~ /^(.+)$/ then
             soql = "#{$1} WHERE #{where}"
           end
-          
+
           begin
             log.info "query: #{soql}"
             records = client.query(soql)
@@ -64,7 +63,7 @@ module Fluent
               :instance_url => login_info["instanceUrl"]
           end
         end
-      # streaming api 
+      # streaming api
       else
         EM.run do
           log.info "suscribe: #{@topic}"
@@ -79,7 +78,8 @@ module Fluent
     def shutdown
     end
 
-    private 
+    private
+
     def login
       uri = URI('https://login.salesforce.com/services/Soap/u/30.0')
       request = Net::HTTP::Post.new(uri.request_uri, initheader = {'Content-Type' =>'text/xml', 'SOAPAction' => '""'})
