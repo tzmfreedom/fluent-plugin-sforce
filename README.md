@@ -29,14 +29,18 @@ Or install it yourself as:
   query SELECT id, Body FROM FeedItem
   polling_interval 60
   # topic AllMessages
+  # version 43.0
+  # login_endpoint test.salesforce.com
 </source>
 ```
 
-username : Salesforce Username for exporting data.  
-password : Salesforce User's Password.  
-query : SOQL Query.  
-polling_interval : Query Interval Time.  
-topic : PushTopic name to subscribe. 
+|key|description|
+|-|-|
+|username|Salesforce Username for exporting data.|
+|password|Salesforce User's Password.|
+|query|SOQL Query.|
+|polling_interval|Query Interval Time.|
+|topic|PushTopic name to subscribe.|
 
 ## Contributing
 
