@@ -14,3 +14,4 @@
 *.gem
 mkmf.log
 /vendor/bundle
+/.idea
