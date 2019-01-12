@@ -10,6 +10,8 @@ require 'fluent/plugin/input'
 module Fluent
   module Plugin
     class SforceInput < Input
+      class SforceConnectionError < StandardError; end
+
       Fluent::Plugin.register_input('sforce', self)
 
       config_param :query, :string, default: 'SELECT id, Body, CreatedById FROM FeedItem'
@@ -27,14 +29,14 @@ module Fluent
 
       def start
         super
-        login_info = login()
-        client = Restforce.new login_info
+        login_info = login
+        client = Restforce.new login_info.merge(api_version: @version)
 
-        th_low = DateTime.now().strftime('%Y-%m-%dT%H:%M:%S.000%Z')
+        th_low = DateTime.now.strftime('%Y-%m-%dT%H:%M:%S.000%Z')
         # query
         if @topic == nil then
           sleep(@polling_interval)
-          th_high = DateTime.now().strftime('%Y-%m-%dT%H:%M:%S.000%Z')
+          th_high = DateTime.now.strftime('%Y-%m-%dT%H:%M:%S.000%Z')
           loop do
             # create soql query string
             where = "CreatedDate <= #{th_high} AND CreatedDate > #{th_low}"
@@ -46,19 +48,19 @@ module Fluent
             end
 
             begin
-              log.info 'query: #{soql}'
+              log.info "query: #{soql}"
               records = client.query(soql)
               records.each do |record|
                 router.emit(@tag, Fluent::Engine.now, record)
               end
               sleep(@polling_interval)
               th_low = th_high
-              th_high = DateTime.now().strftime('%Y-%m-%dT%H:%M:%S.000%Z')
+              th_high = DateTime.now.strftime('%Y-%m-%dT%H:%M:%S.000%Z')
             rescue Restforce::UnauthorizedError => e
               log.error e
               # retry login
-              login_info = login()
-              client = Restforce.new login_info
+              login_info = login
+              client = Restforce.new login_info.merge(api_version: @version)
             end
           end
           # streaming api
@@ -71,6 +73,8 @@ module Fluent
             end
           end
         end
+      rescue SforceConnectionError => e
+        log.error e.message
       end
 
       def shutdown
@@ -89,8 +93,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
 <env:Body>
 <n1:login xmlns:n1="urn:partner.soap.sforce.com">
-<n1:username>#{@username}</n1:username>
-<n1:password>#{@password}</n1:password>
+<n1:username>#{@username.encode(xml: :text)}</n1:username>
+<n1:password>#{@password.encode(xml: :text)}</n1:password>
 </n1:login>
 </env:Body>
 </env:Envelope>
@@ -104,10 +108,14 @@ BODY
         http.start do |h|
           response = h.request(request)
           doc = Nokogiri::XML(response.body)
+          fault = doc.css('faultstring').inner_text
+          raise SforceConnectionError, fault unless fault.empty?
+
           session_id = doc.css('sessionId').inner_text
           /^(https:\/\/.+\.salesforce\.com)\//.match(doc.css('serverUrl').inner_text)
           instance_url = $1
-          log.info 'login is successful.'
+          log.info "login is successful. instance_url = '#{instance_url}'"
+
           {oauth_token: session_id, instance_url: instance_url}
         end
       end
