@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'fluentd'
   spec.add_dependency 'restforce', '~> 3.0.0'
   spec.add_dependency 'faye', '~> 1.2.4'
-  spec.add_dependency 'nokogiri', '~> 1.8.2'
+  spec.add_dependency 'nokogiri', '>= 1.10.4'
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'test-unit'
 end
